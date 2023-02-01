@@ -22,3 +22,5 @@ contract AttackContract {
     }
 }
 ```
+
+> Btw, I saw that after completing the challenge the problem description changes to congratulate you and also has resources for looking the vulnerability in more detail and solutions. But it is optional and i am already going through secureum.

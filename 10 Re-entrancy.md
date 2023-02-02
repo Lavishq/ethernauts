@@ -52,3 +52,7 @@ contract Attack {
 5. I failed using above code i tried few things and i was failing most of the times but the issue was that `function attack() public` in contract Attack needs to be payable.
 
 6. success
+
+> notes : I forget the Checks-Effects-Interactions pattern name... ik the procedure but the name ...
+
+> There is another AAA - \_\_\_\_ Affirm A... i will update this later... it was mentioned by Patrick Collins

